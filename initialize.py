@@ -39,7 +39,7 @@ def download_and_extract_file(file_url, output_folder):
             # Extract the zip file
             with ZipFile(BytesIO(response.content)) as zip_file:
                 for file_info in zip_file.infolist():
-                    zip_file.extract(file_info, path=output_folder / file_info.filename)
+                    zip_file.extract(file_info, path=output_folder)
             return f'Extracted {file_url} successfully.'
         except Exception as e:
             if attempt < MAX_RETRIES:
