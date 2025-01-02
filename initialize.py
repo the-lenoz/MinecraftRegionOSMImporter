@@ -31,6 +31,7 @@ def download_and_extract_file(file_url, output_folder):
         str: The name of the extracted file or an error message.
     """
     for attempt in range(1, MAX_RETRIES + 1):
+        print(output_folder)
         try:
             # Download the zip file
             response = requests.get(file_url, headers=HEADERS)
@@ -96,9 +97,7 @@ def crawl_and_download(url, output_folder, max_threads=10):
 
         # Recursively process sub_folders
         for sub_folder in sub_folders:
-            sub_folder_name = Path(sub_folder).name
-            sub_folder_output = output_folder / sub_folder_name
-            crawl_and_download(sub_folder, sub_folder_output, max_threads)
+            crawl_and_download(sub_folder, output_folder, max_threads)
 
         print('All files downloaded and extracted successfully.')
 
