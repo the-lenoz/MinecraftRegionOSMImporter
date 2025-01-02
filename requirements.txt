@@ -1,0 +1,9 @@
+numpy==1.26.4
+git+https://github.com/the-lenoz/anvil-new
+open3d==0.18.0
+pywavefront==1.3.3
+
+requests~=2.32.3
+trimesh~=4.4.9
+tqdm~=4.66.5
+beautifulsoup4~=4.12.3

@@ -1,0 +1,3 @@
+[submodule "ObjFileSplitter"]
+	path = ObjFileSplitter
+	url = https://github.com/the-lenoz/ObjFileSplitter
