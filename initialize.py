@@ -136,7 +136,7 @@ def obtain_SRTM_data():
 
 
 def setup_splitter():
-    subprocess.run('ObjFileSplitter/gradlew', cwd='ObjFileSplitter', check=True)
+    subprocess.run(Path('ObjFileSplitter/gradlew').absolute(), cwd='ObjFileSplitter', check=True)
 
 
 def main():
