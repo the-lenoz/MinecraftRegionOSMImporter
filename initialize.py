@@ -31,7 +31,6 @@ def download_and_extract_file(file_url, output_folder):
         str: The name of the extracted file or an error message.
     """
     for attempt in range(1, MAX_RETRIES + 1):
-        print(output_folder)
         try:
             # Download the zip file
             response = requests.get(file_url, headers=HEADERS)
