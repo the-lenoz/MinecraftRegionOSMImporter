@@ -140,9 +140,13 @@ def setup_splitter():
 
 
 def main():
+    print('Setting up OSM2world')
     setup_osm2world()
-    obtain_SRTM_data()
+    print('Setting up splitter')
     setup_splitter()
+
+    print('Obtaining SRTM data. It may take long')
+    obtain_SRTM_data()
 
 
 if __name__ == '__main__':
