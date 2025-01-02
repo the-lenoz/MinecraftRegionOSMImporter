@@ -119,7 +119,7 @@ def fetch_links(url):
         response = requests.get(url, headers=HEADERS)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')
-        links = [f'{url}/{a["href"]}' for a in soup.find_all('a', href=True) if not a['href'].startswith('?')]
+        links = [f'{url[:-11]}/{a["href"]}' for a in soup.find_all('a', href=True) if not a['href'].startswith('?')]
         return links
     except Exception as e:
         print(f'Failed to fetch links from {url}: {e}')
