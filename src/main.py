@@ -1,29 +1,21 @@
-from typing import List, Dict
-
-import sys
-import os
-
-from pathlib import Path
-import tempfile
-
 import argparse
+import math
 import subprocess
-
+import sys
+import tempfile
+from concurrent.futures import ProcessPoolExecutor
+from datetime import datetime
 from json import load
-
-import numpy as np
+from pathlib import Path
+from typing import Dict
 
 import anvil
+import numpy as np
 
-import requests
-
-from datetime import datetime
-
-from concurrent.futures import ProcessPoolExecutor
-
+from internet import download_map_data, download_SRTM_data
 from mathematics import MapProjection
-from voxelizer import voxelize_mesh, make_terrain
 from mtl import get_material_from_file, get_material_sort_key
+from voxelizer import voxelize_mesh, make_terrain
 
 CONFIG_FILE = Path('config.json')
 
@@ -35,14 +27,7 @@ def read_config(path: Path):
 
 
 def check_osm2world_stderr(stderr) -> bool:
-    return True  # Add checking for elevation calculation fail
-
-
-def download_map_data(config: dict, bbox: tuple, output_file_path: Path):
-    url = config['url'].format(lat0=bbox[0][0], lon0=bbox[0][1], lat1=bbox[1][0], lon1=bbox[1][1])
-    response = requests.get(url)
-    with open(output_file_path, 'w') as osm_file:
-        osm_file.write(response.text)
+    return True or stderr  # Add checking for elevation calculation fail
 
 
 def run_osm2world(java_executable: Path, config: dict, output_file_path: Path, map_data_path: Path) -> None:
@@ -61,8 +46,8 @@ def run_osm2world(java_executable: Path, config: dict, output_file_path: Path, m
         raise Exception('OSM2World generated wrong elevation, trace is above.')
 
 
-def run_splitter(java_executable: Path, config: dict, input_file_path: Path, output_directory_path: Path) -> Dict[
-    str, Path]:
+def run_splitter(java_executable: Path, config: dict,
+                 input_file_path: Path, output_directory_path: Path) -> Dict[str, Path]:
     command = [java_executable, '-jar', config['jar'], input_file_path, output_directory_path]
 
     completed_process = subprocess.run(command, capture_output=True, cwd=config['path'])
@@ -82,10 +67,10 @@ def run_splitter(java_executable: Path, config: dict, input_file_path: Path, out
     return output_dictionary
 
 
-def process_material(args):
+def process_material(arguments):
     (material_name, material_mesh_path, material_dictionary, osm2world_output_file_path, config,
      region_min_bound, region_max_bound, region_offset, region_size_x, region_size_z, region_center_x, region_center_z,
-     terrain_blocks) = args
+     terrain_blocks) = arguments
     material = material_dictionary.get(material_name)
     if material:
         material_id = material[0]
@@ -135,9 +120,20 @@ def main(config, region_x, region_z, region_directory_path: Path):
 
     print(f'Got bounding box of map to download: {map_bbox}')
 
+    print('Downloading SRTM data')
+    SRTM_path = Path(config['osm2world']['path']) / 'SRTM'
+    SRTM_path.mkdir()
+    integer_bbox = list(map(math.floor, map_bbox[0])), list(map(math.ceil, map_bbox[1]))
+    for lat in range(integer_bbox[0][0], integer_bbox[1][0] + 1):
+        for lon in range(integer_bbox[0][1], integer_bbox[1][1] + 1):
+            result = download_SRTM_data(config['downloader']['SRTM_url'],
+                                        SRTM_path, lat, lon)
+            print(result)
+    print('Download complete!')
+
     with tempfile.TemporaryDirectory() as temporary_directory_path_plain:
         temporary_directory_path = Path(temporary_directory_path_plain)
-        print('Downoading osm data')
+        print('Downloading osm data')
 
         osm_file_path = temporary_directory_path / 'map_data.osm'
         download_map_data(config['downloader'], map_bbox, osm_file_path)
@@ -202,8 +198,8 @@ def main(config, region_x, region_z, region_directory_path: Path):
         terrain_voxels_list = []
         if terrain_material_objects:
             print('Generating terrain')
-            height_matrix = [[None for x in range(region_size_x)] for z in range(region_size_z)]
-            terrain_matrix = [[False for x in range(region_size_x)] for z in range(region_size_z)]
+            height_matrix = [[None for _ in range(region_size_x)] for _ in range(region_size_z)]
+            terrain_matrix = [[False for _ in range(region_size_x)] for _ in range(region_size_z)]
 
             for terrain_material_object in terrain_material_objects:
                 terrain_voxels_list.extend(
@@ -222,8 +218,8 @@ def main(config, region_x, region_z, region_directory_path: Path):
                     x, z = x % region_size_x, z % region_size_z
                     if (height_matrix and terrain_matrix and
                         not terrain_matrix[z][x] and
-                        (height_matrix[z][x] is None or y < height_matrix[z][x])) and block.id in config['voxelizer'][
-                        'terrain_interpolator_markers']:
+                        (height_matrix[z][x] is None or y < height_matrix[z][x])) and \
+                            block.id in config['voxelizer']['terrain_interpolator_markers']:
                         height_matrix[z][x] = y
 
         if terrain_material_object is not None:
@@ -249,7 +245,7 @@ def main(config, region_x, region_z, region_directory_path: Path):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         prog='MinecraftRegionOSMImporter',
-        description='This utilite can get OSM data and write it to minecraft region files')
+        description='This utility can get OSM data and write it to minecraft region files')
 
     parser.add_argument('--config', dest='config_file_path', default=None, help='Config file path')
     parser.add_argument('-x', type=int, required=True, help='Region X coordinate')

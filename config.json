@@ -9,7 +9,8 @@
     "min_height": 70
   },
   "downloader": {
-    "url": "https://www.openstreetmap.org/api/0.6/map?bbox={lon0},{lat0},{lon1},{lat1}"
+    "url": "https://www.openstreetmap.org/api/0.6/map?bbox={lon0},{lat0},{lon1},{lat1}",
+    "SRTM_url": "https://srtm.kurviger.de/SRTM3"
   },
   "osm2world": {
     "path": "osm2world",

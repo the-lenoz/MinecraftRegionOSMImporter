@@ -4,7 +4,7 @@ import math
 class MapProjection:
     origin_x = None
     origin_y = None
-    
+
     def __init__(self, origin_lat, origin_lon):
         self.scale_factor = MercatorProjection.earth_circumference(origin_lat)
         self.origin_y = MercatorProjection.lat_to_y(origin_lat) * self.scale_factor
@@ -21,18 +21,17 @@ class MapProjection:
         x = round(x * 1000) / 1000.0
         y = round(y * 1000) / 1000.0
 
-        return (y, x)  
+        return y, x
 
     def to_lat_lon(self, y, x):
         if self.origin_x is None:
             raise ValueError("The origin needs to be set first")
 
-        return (MercatorProjection.y_to_lat((y + self.origin_y) / self.scale_factor), 
-            MercatorProjection.x_to_lon((x + self.origin_x) / self.scale_factor))
-    
+        return (MercatorProjection.y_to_lat((y + self.origin_y) / self.scale_factor),
+                MercatorProjection.x_to_lon((x + self.origin_x) / self.scale_factor))
+
 
 class MercatorProjection:
-
     R_MAJOR = 6378137.0
     R_MINOR = 6356752.3142
     RATIO = R_MINOR / R_MAJOR
